@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <!-- import CSS -->
+  <link rel="stylesheet" href="static/css/index.css">
+</head>
+<body>
+  <div id="app">
+    <template>
+      <el-card :style="maxHeight" class="box-card">
+        <el-tabs v-model="activeName" @tab-click="handleClick">
+          <el-tab-pane label="汇总" name="summer"></el-tab-pane>
+          <el-tab-pane label="战绩录入" name="record"></el-tab-pane>
+          <el-tab-pane label="悬赏分配" name="reward"></el-tab-pane>
+        </el-tabs>
+        <div v-if="activeName == 'summer'">
+          <form class="form">
+            <el-row :gutter="20">
+              <el-col :sm="18" :md="10" :lg="8" :xl="6">
+                <el-input v-model="url" name="url" placeholder="请输入完整的Url" class="url"></el-input>
+              </el-col>
+              <el-col :sm="6" :md="4" :lg="4" :xl="3">
+                <el-button type="primary" 
+                  @click="urlDownload" 
+                  v-loading.fullscreen="loading"
+                  element-loading-text="下载数据中,请稍等 ... ..."
+                  element-loading-spinner="el-icon-loading"
+                  element-loading-background="rgba(0, 0, 0, 0.8)">下载</el-button>
+              </el-col>
+            </el-row>
+          </form>
+          <el-card class="info">
+            <div>
+              <p>输入网址需要带上协议,即http或https,比如<b>http://iwangle.me/</b></p>
+              <p>暂时不支持子网站的下载,比如<b>http://www.57mz.com/programs/golang</b></p>
+              <p>下载完成后直接双击打开文件夹内<b>index.html</b>即可</p>
+            </div>
+          </el-card>
+        </div>
+        <div v-if="activeName == 'record'">
+          <el-form class="form" label-width="100px">
+            <el-row :gutter="20">
+              <el-col :span="24">
+                <el-row :gutter="20">
+                  <el-col :sm="12" :lg="8" :xl="6">
+                    <el-form-item label="项目">
+                      <el-select
+                        v-model="record.project_id"
+                        style="margin-left: 20px;"
+                        placeholder="请选择项目">
+                        <el-option
+                          v-for="item in project_list"
+                          :key="item.id"
+                          :label="item.name"
+                          :value="item.id">
+                        </el-option>
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-col>
+              <el-col :sm="12" :lg="8" :xl="6">
+                <el-form-item label="成员">
+                  <el-select
+                    v-model="record.user_id"
+                    multiple
+                    collapse-tags
+                    style="margin-left: 20px;"
+                    placeholder="请选择成员">
+                    <el-option
+                      v-for="item in user_list"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.id">
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :sm="12" :lg="8" :xl="6">
+                <el-form-item label="分数">
+                  <el-input v-model.number="record.result" placeholder="请输入分数"></el-input>
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
+          <el-button style="margin-left: 60px" type="primary" plain @click="saveRecord">保存</el-button>
+        </div>
+        <div v-if="activeName == 'region'">
+          <form class="form">
+            <el-row :gutter="20">
+              <el-col :sm="18" :md="10" :lg="8" :xl="6">
+                <el-input v-model="idcard" name="idcard" placeholder="请输入完整的身份证号" class="idcard"></el-input>
+              </el-col>
+              <el-col :sm="6" :md="4" :lg="4" :xl="3">
+                <el-button type="primary" @click="regionQ">查询</el-button>
+              </el-col>
+            </el-row>
+          </form>
+          <el-alert
+            v-if="err_show"
+            :title="region.err"
+            type="info">
+          </el-alert>
+          <el-card v-else-if="info_show" class="info">
+            
+          </el-card>
+        </div>
+      </el-card>
+    </template>
+  </div>
+</body>
+  <!-- import Vue before Element -->
+  <script src="static/js/vue.js"></script>
+  <!-- import JavaScript -->
+  <script src="static/js/index.js"></script>
+  <script src="static/js/http.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      data: function() {
+        return { 
+          record: {
+            project_id: '',
+            user_id: '',
+            result: 0
+          },
+          project_list: {},
+          user_list: {},
+          fullHeight: document.documentElement.clientHeight - 20,
+          activeName: 'record',
+          idcard: '',
+          salary: '',
+          social: '',
+          info_show: false,
+          err_show: false,
+          url: '',
+          region: {
+            addr: '',
+            brith: '',
+            gender: '',
+            err: '',
+          },
+          tax: {
+            new_more: 0,
+            new_should: 0,
+            new_tax: 0,
+            old_should: 0,
+            old_tax: 0,
+          },
+          loading: false,
+        }
+      },
+      computed: {
+        maxHeight: function () {
+          return {
+            'height': this.fullHeight + 'px',
+            'overflow':'auto',
+            'overflow-x':'hidden'
+          }
+        }
+      },
+      methods: {
+        saveRecord() {
+          this.$http.post('/record',this.record).then(function(res){
+              console.log(res.data)
+          },function(res){
+              console.log(res.status);
+          });
+        },
+        getProject() {
+          this.$http.get('/projects').then(function(res){
+              this.project_list = res.data.data
+              console.log("this.project_list",this.project_list)
+          },function(res){
+              console.log(res.status);
+          });
+        },
+        getUser() {
+          this.$http.get('/users').then(function(res){
+              this.user_list = res.data.data
+              console.log("this.user_list",this.user_list)
+          },function(res){
+              console.log(res.status);
+          });
+        },
+        handleClick(tab, event) {
+          this.init()
+        },
+        urlDownload() {
+          this.loading = true;
+          this.init()
+          this.$http.get('/imitate/?url='+this.url).then(function(res){
+              this.loading = false;
+              item = res.data
+              if (item.code == 200) {
+                setTimeout(window.open(item.data, '_blank'), 500);
+              } else {
+                this.$message({
+                  message: '下载失败!',
+                  type: 'warning'
+                });
+              }
+
+          },function(res){
+              console.log(res.status);
+          });
+        },
+        regionQ() {
+          this.init()
+          this.$http.get('/region/?idcard='+this.idcard).then(function(res){
+              item = res.data.data
+              this.region.addr = item.Addr
+              this.region.brith = item.Birth
+              this.region.gender = item.Gender
+              this.region.err = item.Err
+              if (item.Err != '') {
+                this.err_show = true
+              } else {
+                this.info_show = true
+              }
+          },function(res){
+              console.log(res.status);
+          });
+        },
+        taxQ() {
+          this.init()
+          this.$http.get('/tax/?salary='+this.salary+'&social='+this.social||0).then(function(res){
+            this.info_show = true
+            item = res.data.data
+            this.tax.new_more = item.newMore
+            this.tax.new_should = item.newShould
+            this.tax.new_tax = item.newTax
+            this.tax.old_should = item.oldShould
+            this.tax.old_tax = item.oldTax
+          },function(res){
+              console.log(res.status);
+          });
+        },
+        init() {
+          this.info_show = false
+          this.err_show = false
+        }
+      },
+      mounted() {
+        this.getProject()
+        this.getUser()
+      },
+      watch: {
+        salary() {
+          this.taxQ()
+        },
+        social() {
+          this.taxQ()
+        }
+      }
+    })
+  </script>
+  <style type="text/css">
+    .box-card {
+      /*min-height: 500px;*/
+    }
+    .form {
+      margin-bottom: 10px;
+    }
+    .info {
+      background-color: #f3f3f380;
+    }
+    .info div {
+      margin: 5px;
+    }
+  </style>
+</html>
