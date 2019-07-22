@@ -1,1 +1,4 @@
 .idea/
+vendor/
+rebxs.exe~
+go.sum
