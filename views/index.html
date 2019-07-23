@@ -9,11 +9,12 @@
   <div id="app">
     <template>
       <el-card :style="maxHeight">
-        <el-tabs v-model="activeName" @tab-click="handleClick">
+        <el-tabs v-model="name" @tab-click="handleClick">
           <el-tab-pane label="汇总数据" name="summer"></el-tab-pane>
-          <el-tab-pane label="战绩录入" name="record"></el-tab-pane>
           <el-tab-pane label="战绩查看" name="see"></el-tab-pane>
+          <el-tab-pane label="战绩录入" name="record"></el-tab-pane>
           <el-tab-pane label="悬赏分配" name="reward"></el-tab-pane>
+          <el-tab-pane label="用前必读" name="read"></el-tab-pane>
         </el-tabs>
         <div style="margin: 0px 10px 20px 10px;">
           <span>今天属于统计数据以来的第{{week}}周,录入周次不用选择，系统自动计算</span>
@@ -24,14 +25,16 @@
         <div v-if="activeName == 'summer'">
           <el-card class="box-card">
             <el-table
+              show-summary
               :data="summerData"
               style="width: 100%"
-              height="500px"
+              :height="fullHeight - 170"
               :default-sort = "{prop: '总分', order: 'descending'}"
               >
               <el-table-column
                 prop="成员"
                 label="成员"
+                sortable
                 min-width="200">
               </el-table-column>
               <el-table-column
@@ -43,9 +46,10 @@
               <el-table-column
                 v-for="item in title"
                 :prop="item"
+                sortable
                 :label="item"
                 min-width="200">
-                <template slot-scope="scope">{{ scope.row[item] || 0}}</template>
+                <!-- <template slot-scope="scope">{{ scope.row[item] || 0}}</template> -->
               </el-table-column>
             </el-table>
           </el-card>
@@ -55,7 +59,7 @@
             <el-table
               :data="orgData"
               style="width: 100%"
-              height="500px"
+              :height="fullHeight - 170"
               :default-sort = "{prop: '项目', order: 'descending'}">
               <el-table-column
                 prop="成员"
@@ -89,7 +93,7 @@
             </el-table>
           </el-card>
         </div>
-        <div v-if="activeName == 'record'">
+        <div v-if="activeName == 'record' && login">
           <el-form class="form" label-width="100px">
             <el-row :gutter="20">
               <el-col :sm="12" :lg="8" :xl="6">
@@ -123,11 +127,27 @@
             </el-form>
           </el-card>
         </div>
-        <div v-if="activeName == 'reward'">
+        <div v-if="activeName == 'reward' && login">
           <el-alert
             title="后续完善"
             type="info">
           </el-alert>
+        </div>
+        <div v-if="activeName == 'read' && login">
+          <el-card class="box-card">
+            <el-alert
+              title="提示"
+              type="info"
+              :closable="false">
+              <p>1.金币、河豚、飞镖、无尽、西瓜、宝箱均直接录入实际 <i class="i"> 成绩 </i>即可，比如金币1666个、河豚108只（不带用单位），系统根据成绩自动积分</p>
+              <p>2.深渊场次录入实际参战<i class="i"> 场次</i>，系统根据场次自动积分</p>
+              <p>3.深渊伤害、家族战团战均为录入<i class="i"> 名次 </i>，系统根据名次自动积分</p>
+              <p>4.家族战pvp直接录入<i class="i"> 分数</i>，具体情况：胜场MVP计4分,胜场上榜计3分，胜场未上榜计2分，负场上榜计2分，其他不计分</p>
+              <p>5.输入密码后，浏览器将会储存登陆信息<i class="i"> 1天</i>，过期则需要重新登录</p>
+              <p>6.开发不易，不喜勿喷，有改进意见可以私聊我，qq:<i class="i"> 285273592</i></p>
+              <p>7. <i class="i">后续 </i>将添加项目、积分方式、成员等相关信息的增删改查功能</p>
+            </el-alert>
+          </el-card>
         </div>
       </el-card>
     </template>
@@ -144,6 +164,9 @@
       el: '#app',
       data: function() {
         return { 
+          name: "summer",
+          login: false,
+          password: 'fry',
           project_id: '',
           week: 1,
           time: 1,
@@ -192,6 +215,18 @@
         }
       },
       methods: {
+        setCookie(name, value) { 
+          var exp = new Date(); 
+          exp.setTime(exp.getTime() + 60 * 60 * 1000); 
+          document.cookie = name + "=" + escape(value) + ";expires=" + exp.toGMTString() + ";path=/"; 
+        },
+        getCookie(name) { 
+          var arr, reg = new RegExp("(^| )" + name + "=([^;]*)(;|$)"); 
+          if (arr = document.cookie.match(reg)) 
+            return unescape(arr[2]); 
+          else 
+            return null; 
+        },
         projectChange() {
           this.userRecordInit()
           var time = "第"+this.time+"周"
@@ -214,9 +249,17 @@
         getSummer() {
           var time = "第"+this.time+"周"
           this.$http.get('/recordList?time='+time).then(function(res){
-              this.summerData = res.data.data
-              this.orgData = res.data.org
+              this.summerData = []
               this.title = res.data.title
+              var that = this
+              _.forEach(res.data.data,function (o) {
+                var d = o
+                _.forEach(res.data.title,function (q) {
+                  d[q] = o[q] || 0
+                })
+                that.summerData.push(d)
+              })
+              this.orgData = res.data.org
           },function(res){
               console.log(res.status);
           });
@@ -269,6 +312,39 @@
           });
         },
         handleClick(tab, event) {
+          if (_.indexOf(["summer","see"],tab.name) == -1 && !this.login && this.getCookie('password') != this.password) {
+            this.$prompt('请输入密码', '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+            }).then(({ value }) => {
+              if (value == this.password) {
+                this.login = true
+                this.activeName = this.name
+                this.setCookie("password",value)
+                this.$message({
+                  type: 'success',
+                  message: '密码正确！'
+                });
+              } else {
+                this.name = this.activeName
+                this.login = false
+                this.$message({
+                  type: 'warning',
+                  message: '密码错误！'
+                });
+              }
+              
+            }).catch(() => {
+              this.name = this.activeName
+              this.$message({
+                type: 'info',
+                message: '取消输入'
+              });       
+            });
+          } else {
+            // this.login = true
+            this.activeName = this.name
+          }
           this.init()
         },
         urlDownload() {
@@ -322,8 +398,8 @@
           });
         },
         init() {
-          this.info_show = false
-          this.err_show = false
+          // this.info_show = false
+          // this.err_show = false
         }
       },
       mounted() {
@@ -342,6 +418,9 @@
     })
   </script>
   <style type="text/css">
+    .i {
+      color: #67C23A;
+    }
     .w-100 {
       width: 100%;
     }

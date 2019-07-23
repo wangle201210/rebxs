@@ -162,9 +162,9 @@ func DataFormat(d []map[string]interface{}) (r map[string]map[string]interface{}
 		d4p["成员"] = row
 		for _,dp := range d{
 			if dp["成员"] == row{
-				d4p[dp["项目"].(string)] = dp["分数"]
-				now,_ := strconv.Atoi(dp["分数"].(string))
-				total += now
+				i, _ := strconv.Atoi(dp["分数"].(string))
+				d4p[dp["项目"].(string)] = i
+				total += i
 			}
 		}
 		d4p["总分"] = total
