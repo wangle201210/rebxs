@@ -7,6 +7,7 @@ import (
 type Project struct {
 	Id       	int64		`json:"id" orm:"column(id);auto;"`
 	Name     	string    	`json:"name" orm:"column(name);size(100)"`
+	Record		[]*Record	`orm:"reverse(many)"`
 }
 
 // Project database CRUD methods include Insert, Read, Update and Delete

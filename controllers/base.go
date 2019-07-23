@@ -15,6 +15,8 @@ type BaseController struct {
 
 // 预留个基础控制器
 func init()  {
+	beego.BConfig.WebConfig.TemplateLeft="<<<"
+	beego.BConfig.WebConfig.TemplateRight=">>>"
 	return
 }
 

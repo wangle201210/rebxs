@@ -11,7 +11,12 @@ type Record struct {
 	Result 		int64    	`json:"result" orm:"column(result);size(100)"`
 	Time     	string    	`json:"time" orm:"column(time);size(100)"`
 }
-
+// 多字段唯一键
+func (u *Record) TableUnique() [][]string {
+	return [][]string{
+		[]string{"user_id", "project_id","time"},
+	}
+}
 // Record database CRUD methods include Insert, Read, Update and Delete
 func (reg *Record) Insert() error {
 	if _, err := orm.NewOrm().Insert(reg); err != nil {

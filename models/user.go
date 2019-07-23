@@ -8,6 +8,7 @@ import (
 type User struct {
 	Id       	int64		`json:"id" orm:"column(id);auto;"`
 	Name     	string    	`json:"name" orm:"column(name);size(100)"`
+	Record      []*Record	`orm:"reverse(many)"`
 }
 
 func Find(m User) (r User) {

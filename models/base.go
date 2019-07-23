@@ -13,7 +13,6 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
-
 	conn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s",
 		appConf.String("database::db_user"),
 		appConf.String("database::db_passwd"),
@@ -22,7 +21,6 @@ func Init() {
 		appConf.String("database::db_name"),
 		appConf.String("database::db_charset"))
 	orm.RegisterDataBase("default", "mysql", conn)
-
 	//自动建表
 	name := "default"
 	force := false
@@ -32,9 +30,6 @@ func Init() {
 		fmt.Println(err)
 	}
 	orm.RunCommand()
-	//orm.RegisterModel(new(Pic))
-	//orm.RegisterModel(new(User))
-
 }
 
 //返回带前缀的表名
