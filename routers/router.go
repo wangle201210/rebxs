@@ -12,4 +12,7 @@ func init() {
 	beego.Router("/record", &controllers.RecordController{}, "post:Save")
 	beego.Router("/recordList", &controllers.RecordController{}, "get:GetList")
 	beego.Router("/showOne", &controllers.RecordController{}, "get:ShowOne")
+	beego.Router("/reward", &controllers.RewardController{}, "post:Save")
+	beego.Router("/rewardList", &controllers.RewardController{}, "get:ShowList")
+
 }

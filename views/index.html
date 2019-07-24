@@ -12,8 +12,9 @@
         <el-tabs v-model="name" @tab-click="handleClick">
           <el-tab-pane label="汇总数据" name="summer"></el-tab-pane>
           <el-tab-pane label="战绩查看" name="see"></el-tab-pane>
+          <el-tab-pane label="悬赏查看" name="seeR"></el-tab-pane>
           <el-tab-pane label="战绩录入" name="record"></el-tab-pane>
-          <el-tab-pane label="悬赏分配" name="reward"></el-tab-pane>
+          <el-tab-pane label="悬赏录入" name="reward"></el-tab-pane>
           <el-tab-pane label="用前必读" name="read"></el-tab-pane>
         </el-tabs>
         <div style="margin: 0px 10px 20px 10px;">
@@ -25,6 +26,7 @@
         <div v-if="activeName == 'summer'">
           <el-card class="box-card">
             <el-table
+              border
               show-summary
               :data="summerData"
               style="width: 100%"
@@ -57,6 +59,7 @@
         <div v-if="activeName == 'see'">
           <el-card class="box-card">
             <el-table
+              border
               :data="orgData"
               style="width: 100%"
               :height="fullHeight - 170"
@@ -93,7 +96,42 @@
             </el-table>
           </el-card>
         </div>
-        <div v-if="activeName == 'record' && login">
+        <div v-if="activeName == 'seeR'">
+          <el-card class="box-card">
+            <el-table
+              border
+              :data="rewardData"
+              style="width: 100%"
+              :height="fullHeight - 170"
+              border
+              :default-sort = "{prop: '类型', order: 'descending'}">
+              <el-table-column
+                prop="User__Name"
+                sortable
+                label="提供者"
+                min-width="200">
+              </el-table-column>
+              <el-table-column
+                prop="Type"
+                sortable
+                label="类型"
+                min-width="100">
+              </el-table-column>
+              <el-table-column
+                prop="Participant"
+                label="参与人"
+                min-width="250">
+              </el-table-column>
+              <el-table-column
+                prop="Time"
+                label="时间"
+                sortable
+                min-width="200">
+              </el-table-column>
+            </el-table>
+          </el-card>
+        </div>
+        <div v-if="activeName == 'record'">
           <el-form class="form" label-width="100px">
             <el-row :gutter="20">
               <el-col :sm="12" :lg="8" :xl="6">
@@ -127,25 +165,101 @@
             </el-form>
           </el-card>
         </div>
-        <div v-if="activeName == 'reward' && login">
-          <el-alert
-            title="后续完善"
-            type="info">
-          </el-alert>
+        <div v-if="activeName == 'reward'">
+          <el-form class="form" label-width="100px">
+            <el-row :gutter="20">
+              <el-col :sm="12" :lg="8" :xl="6">
+                <el-form-item label="提供人">
+                  <el-select
+                    v-model="provider"
+                    class="w-100"
+                    filterable
+                    placeholder="请选择提供人">
+                    <el-option
+                      v-for="item in user_list"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.id">
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :sm="12" :lg="8" :xl="6">
+                <el-form-item label="悬赏类型">
+                  <el-select
+                    v-model="rewardType"
+                    class="w-100"
+                    filterable
+                    placeholder="请选择悬赏类型">
+                    <el-option
+                      v-for="item in rewardList"
+                      :key="item"
+                      :label="item"
+                      :value="item">
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :lg="24" :xl="12">
+                <el-form-item label="参与人员">
+                  <el-transfer
+                    filterable
+                    :titles="['成员名单', '参与人员']"
+                    filter-placeholder="请输入姓名筛选"
+                    v-model="rewardUser"
+                    :data="user_reward">
+                  </el-transfer>
+                </el-form-item>
+              </el-col>
+              <el-button style="float: right; margin-right: 20px" type="primary" plain @click="saveReward">保存</el-button>
+            </el-row>
+          </el-form>
         </div>
-        <div v-if="activeName == 'read' && login">
+        <div v-if="activeName == 'read'">
           <el-card class="box-card">
             <el-alert
-              title="提示"
+              title="录入提示"
               type="info"
               :closable="false">
               <p>1.金币、河豚、飞镖、无尽、西瓜、宝箱均直接录入实际 <i class="i"> 成绩 </i>即可，比如金币1666个、河豚108只（不带用单位），系统根据成绩自动积分</p>
               <p>2.深渊场次录入实际参战<i class="i"> 场次</i>，系统根据场次自动积分</p>
               <p>3.深渊伤害、家族战团战均为录入<i class="i"> 名次 </i>，系统根据名次自动积分</p>
               <p>4.家族战pvp直接录入<i class="i"> 分数</i>，具体情况：胜场MVP计4分,胜场上榜计3分，胜场未上榜计2分，负场上榜计2分，其他不计分</p>
-              <p>5.输入密码后，浏览器将会储存登陆信息<i class="i"> 1天</i>，过期则需要重新登录</p>
+              <p>5.输入密码后，浏览器将会储存登陆信息<i class="i"> 7天</i>，过期则需要重新登录</p>
               <p>6.开发不易，不喜勿喷，有改进意见可以私聊我，qq:<i class="i"> 285273592</i></p>
               <p>7. <i class="i">后续 </i>将添加项目、积分方式、成员等相关信息的增删改查功能</p>
+            </el-alert>
+            <el-alert
+              title="积分规则"
+              type="info"
+              :closable="false">
+              <h6>目前积分规则由我统一录入数据库,之后有时间会开发录入功能，具体规则如下</h6>
+              <h5>1.每周备战副本积分为4分   2分   1分</h5>
+                 <p>河豚副本：109只计4分，108只计2分，100-107只计1分，100只以下不计分</p>
+                 <p>金币副本：1640以上计4分，1600-1639计2分，1500-1599计1分，1500以下不计分</p>
+                 <p>飞镖副本：540以上计4分，500-539计2分，450-499计1分，450以下不计分</p>
+                 <p>宝箱副本：54个以上计4分，50-53个计2分，45-49个计1分，45以下不计分</p>
+                 <p>无尽副本：4000米以上计4分，3000-3999计2分，2000-2999计1分，2000以下不计分</p>
+                 <p>西瓜副本：290以上计4分，250-289计2分，200-249计1分，200以下不计分</p>
+              <h5>2.每周家族深渊积分</h5>
+                 <p>（1）：以打满4轮为基准，打满4轮积2分，4轮以上每多打1轮增加1分</p>
+                 <p>（2）：伤害排名前三位额外积4分</p>
+                 <p>（3）：伤害排名第4-10位额外积3分</p>
+                 <p>（4）：伤害排名第11-20位额外积2分</p>
+                 <p>（5）：伤害排名20位以下额外积1分</p>
+              <h5>3.每周家族战积分</h5>
+                <p>（1）：团队战，排名第一计6分，第2-6名计4分，7-12名计3分，13-30名计2分，30名开外计1分</p>
+                <p>（2）：其他战斗，胜场MVP计4分,胜场上榜计3分，胜场未上榜计2分，负场上榜计2分，其他不计分</p>
+              <h5>4.悬赏积分</h5>
+                <p>有s，s+，ss三种悬赏的，通过通知管理员，经过管理员安排的才加分，一切遵循自愿原则，管理员不会强制安排</p>
+                <p>s悬赏每个位置计1分</p>
+                <p>s+悬赏每个位置计2分</p>
+                <p>ss悬赏每个位置计4分</p>
+                <p>管理员安排的悬赏，管理员会在群里通知全体成员，规定时间报名，报名的人员按上轮积分排名，名次高的优先考虑，已经打满的不允许报名，可以发到等家族频道的。未通知管理员，直接通过群，微信，家族频道拉人的，不计分</p>
+              <h5>5.其他</h5>
+              <p>积分每周统计一次，每周一次排名</p>
+              <p>每月更新一次积分</p>
+              <p>每周家族积分要求最低5分，连续两周不达标的踢出家族</p>
             </el-alert>
           </el-card>
         </div>
@@ -164,6 +278,11 @@
       el: '#app',
       data: function() {
         return { 
+          rewardData: [],
+          rewardUser: [],
+          rewardType: "",
+          rewardList: ["s","s+","ss","ss+"],
+          provider: "",
           name: "summer",
           login: false,
           password: 'fry',
@@ -212,12 +331,62 @@
             'overflow':'auto',
             'overflow-x':'hidden'
           }
+        },
+        user_reward: function () {
+          var data = []
+          _.forEach(this.user_list,function (o) {
+            var r = {}
+            r.label = o.name 
+            r.key = o.name
+            data.push(r)
+          })
+          return data
         }
       },
       methods: {
+        getReward() {
+          var time = "第"+this.time+"周"
+          var project_id = this.project_id
+          var provider = this.provider || 0
+          this.$http.get('/rewardList?time='+time+'&user_id='+provider ).then(function(res){
+            console.log("res.data",res.data)
+            this.rewardData = res.data
+          },function(res){
+              console.log(res.status);
+          });
+        },
+        saveReward() {
+          if (!this.provider) {
+            this.$message({
+              type: warning,
+              message: "请选择提供人",
+            })
+          } else if (!this.rewardType) {
+            this.$message({
+              type: warning,
+              message: "请选择悬赏类型",
+            })
+          }
+          var data = {}
+          data.user_id = this.provider
+          data.type = this.rewardType
+          data.participant = _.join(this.rewardUser, ' | ')
+          this.$http.post('/reward',data).then(function(res){
+            this.$message({
+              message: '保存成功！',
+              type: 'success'
+            });
+            this.provider = ""
+            this.rewardType = ""
+            this.rewardUser = []
+            this.getSummer()
+          },function(res){
+              console.log(res.status);
+          });
+        },
         setCookie(name, value) { 
           var exp = new Date(); 
-          exp.setTime(exp.getTime() + 60 * 60 * 1000); 
+          exp.setTime(exp.getTime() + 60 * 60 * 1000 * 24 * 7); 
           document.cookie = name + "=" + escape(value) + ";expires=" + exp.toGMTString() + ";path=/"; 
         },
         getCookie(name) { 
@@ -245,6 +414,7 @@
         },
         weekChange() {
           this.getSummer()
+          this.getReward()
         },
         getSummer() {
           var time = "第"+this.time+"周"
@@ -312,7 +482,7 @@
           });
         },
         handleClick(tab, event) {
-          if (_.indexOf(["summer","see"],tab.name) == -1 && !this.login && this.getCookie('password') != this.password) {
+          if (_.indexOf(["record","reward"],tab.name) > -1 && !this.login && this.getCookie('password') != this.password) {
             this.$prompt('请输入密码', '提示', {
               confirmButtonText: '确定',
               cancelButtonText: '取消',
@@ -403,6 +573,7 @@
         }
       },
       mounted() {
+        this.getReward()
         this.getSummer()
         this.getProject()
         this.getUser()
@@ -436,6 +607,12 @@
     .box-card {
       border-top-color: #409EFF;
       border-top-width: 3px;
+    }
+    .el-transfer-panel__body {
+      height: 450px;
+    }
+    .el-transfer-panel__list.is-filterable {
+      height: 398px;
     }
   </style>
 </html>

@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/astaxie/beego/orm"
+	"time"
 )
 
 type Reward struct {
@@ -10,8 +11,9 @@ type Reward struct {
 	Type     	string    	`json:"type" orm:"column(type);size(100)"`
 	Participant string    	`json:"participant" orm:"column(participant);size(100)"`
 	Time     	string    	`json:"time" orm:"column(time);size(100)"`
+	CreatedAt   time.Time	`json:"created_at" orm:"auto_now_add;type(datetime)"`
+	UpdatedAt   time.Time	`json:"updated_at" orm:"auto_now;type(datetime)"`
 }
-
 // Reward database CRUD methods include Insert, Read, Update and Delete
 func (reg *Reward) Insert() error {
 	if _, err := orm.NewOrm().Insert(reg); err != nil {

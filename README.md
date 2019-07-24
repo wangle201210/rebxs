@@ -1,6 +1,22 @@
 # rebxs
 忍者必须死-疯人院-积分-悬赏
+### 技术栈 
+    vue + elementui + go + beego
+### 项目运行
+#### 本地
+    git clone https://github.com/wangle201210/rebxs.git
+    cd rebxs
+    go mod tidy
+    go mod vendor
+    bee run 
+    
+#### 打包linux环境运行程序
+    bee pack -be GOOS=linux
+   [bee 工具安装方法](https://beego.me/docs/install/bee.md)
 
+#### 线上项目地址
+    录入数据界面由于数据是真实数据，所以需要输入密码后才能进入，此处不方便告知，有意者可以私聊我下面有我的私人qq
+   [demo](http://frb.iwangle.me/)
 ### 表格分析
 #### 1.人员表 （user）
 	name: 人员名字

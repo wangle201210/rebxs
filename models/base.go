@@ -13,7 +13,7 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
-	conn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s",
+	conn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&loc=Local",
 		appConf.String("database::db_user"),
 		appConf.String("database::db_passwd"),
 		appConf.String("database::db_host"),

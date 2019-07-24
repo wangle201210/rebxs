@@ -117,11 +117,10 @@ func getTime() (s string)  {
 }
 
 func  (this *RecordController) GetList()  {
-	time := this.GetString("time")
-	fmt.Println("time",time)
+	timeNow := this.GetString("time")
 	o := orm.NewOrm()
 	var lists []orm.Params
-	num, err := o.Raw("SELECT u.name AS '成员',p.name as '项目',r.result as '成绩',s.score as '分数',r.time as '时间' FROM user u LEFT JOIN record r ON r.user_id = u.id LEFT JOIN project p ON p.id = r.project_id LEFT JOIN score s ON s.project_id = p.id and s.min <= r.result and r.result <= s.max WHERE r.id > 0  and r.time = ? ", time).Values(&lists)
+	num, err := o.Raw("SELECT u.name AS '成员',p.name as '项目',r.result as '成绩',s.score as '分数',r.time as '时间' FROM user u LEFT JOIN record r ON r.user_id = u.id LEFT JOIN project p ON p.id = r.project_id LEFT JOIN score s ON s.project_id = p.id and s.min <= r.result and r.result <= s.max WHERE r.id > 0  and r.time = ? ", timeNow).Values(&lists)
 	if err == nil && num > 0 {
 	}
 	var data []map[string]interface{}
@@ -133,6 +132,9 @@ func  (this *RecordController) GetList()  {
 		}
 		data = append(data,d)
 	}
+	score := RewardScore(0,timeNow)
+
+	data = append(data,score...)
 	res := make(map[string]interface{})
 	title := helper.GetValueByKey(data, "项目")
 	title = helper.SliceRemoveDuplicate(title)//获取全部成员

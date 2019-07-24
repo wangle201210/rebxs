@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/astaxie/beego/orm"
+	"time"
 )
 
 type Record struct {
@@ -10,6 +11,8 @@ type Record struct {
 	Project     *Project    `orm:"rel(fk)"`
 	Result 		int64    	`json:"result" orm:"column(result);size(100)"`
 	Time     	string    	`json:"time" orm:"column(time);size(100)"`
+	CreatedAt   time.Time	`json:"created_at" orm:"auto_now_add;type(datetime)"`
+	UpdatedAt   time.Time	`json:"updated_at" orm:"auto_now;type(datetime)"`
 }
 // 多字段唯一键
 func (u *Record) TableUnique() [][]string {
