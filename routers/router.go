@@ -14,5 +14,8 @@ func init() {
 	beego.Router("/showOne", &controllers.RecordController{}, "get:ShowOne")
 	beego.Router("/reward", &controllers.RewardController{}, "post:Save")
 	beego.Router("/rewardList", &controllers.RewardController{}, "get:ShowList")
+	beego.Router("/users", &controllers.UserController{}, "post:Add")
+	beego.Router("/user/:id", &controllers.UserController{}, "delete:Delete")
+
 
 }

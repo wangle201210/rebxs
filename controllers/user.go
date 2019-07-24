@@ -5,6 +5,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/wangle201210/rebxs/models"
+	"strconv"
 )
 
 type UserController struct {
@@ -48,3 +49,23 @@ func (this *UserController) Add() {
 	return
 }
 
+
+func (this *UserController) Delete() {
+	id := this.Ctx.Input.Param(":id")
+	intId, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		resp = Response{paraError.code,paraError.text,""}
+	} else {
+		modUser.Id = intId
+		e := modUser.Delete()
+		if e != nil {
+			resp = Response{deleteError.code,deleteError.text,""}
+		} else {
+			resp = Response{deleteSuccess.code,deleteSuccess.text,""}
+		}
+
+	}
+	this.Data["json"] = resp
+	this.ServeJSON()
+	return
+}

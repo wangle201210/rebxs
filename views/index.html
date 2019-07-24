@@ -13,9 +13,10 @@
           <el-tab-pane label="汇总数据" name="summer"></el-tab-pane>
           <el-tab-pane label="战绩查看" name="see"></el-tab-pane>
           <el-tab-pane label="悬赏查看" name="seeR"></el-tab-pane>
+          <el-tab-pane label="用前必读" name="read"></el-tab-pane>
           <el-tab-pane label="战绩录入" name="record"></el-tab-pane>
           <el-tab-pane label="悬赏录入" name="reward"></el-tab-pane>
-          <el-tab-pane label="用前必读" name="read"></el-tab-pane>
+          <el-tab-pane label="成员管理" name="user"></el-tab-pane>
         </el-tabs>
         <div style="margin: 0px 10px 20px 10px;">
           <span>今天属于统计数据以来的第{{week}}周,录入周次不用选择，系统自动计算</span>
@@ -263,6 +264,29 @@
             </el-alert>
           </el-card>
         </div>
+         <div v-if="activeName == 'user'">
+          <el-form class="form" label-width="100px">
+            <el-row :gutter="20">
+              <el-col :sm="12" :lg="8" :xl="6">
+                <el-form-item label="新增">
+                  <el-input v-model.number="addUserName"  placeholder="请输入新成员名字"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-button style="float: right; margin-right: 20px" type="primary" plain @click="saveUser">保存</el-button>
+            </el-row>
+          </el-form>
+          <el-card class="box-card">
+            <el-form class="form" label-width="150px">
+              <el-row :gutter="20">
+                <el-col v-for="item in user_record" :sm="12" :lg="8" :xl="6">
+                  <el-form-item :label="item.user_name">
+                    <el-button type="warning" @click="deleteUser(item.user_id)" plain>删除</el-button>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-form>
+          </el-card>
+        </div>
       </el-card>
     </template>
   </div>
@@ -278,6 +302,7 @@
       el: '#app',
       data: function() {
         return { 
+          addUserName: "",
           rewardData: [],
           rewardUser: [],
           rewardType: "",
@@ -344,12 +369,46 @@
         }
       },
       methods: {
+        deleteUser(id) {
+          this.$confirm('此操作将永久删除该成员, 是否继续?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            this.$http.delete('/user/'+id).then(function(res){
+              this.$message({
+                message: '删除成功！',
+                type: 'success'
+              });
+              this.getUser()
+            },function(res){
+                console.log(res.status);
+            });
+          }).catch(() => {
+            this.$message({
+              type: 'info',
+              message: '已取消删除'
+            });          
+          });
+        },
+        saveUser() {
+          var data = {name: this.addUserName}
+          this.$http.post('/users',data).then(function(res){
+            this.$message({
+              message: '新增成功！',
+              type: 'success'
+            });
+            this.addUserName = ""
+            this.getUser()
+          },function(res){
+              console.log(res.status);
+          });
+        },
         getReward() {
           var time = "第"+this.time+"周"
           var project_id = this.project_id
           var provider = this.provider || 0
           this.$http.get('/rewardList?time='+time+'&user_id='+provider ).then(function(res){
-            console.log("res.data",res.data)
             this.rewardData = res.data
           },function(res){
               console.log(res.status);
@@ -482,7 +541,7 @@
           });
         },
         handleClick(tab, event) {
-          if (_.indexOf(["record","reward"],tab.name) > -1 && !this.login && this.getCookie('password') != this.password) {
+          if (_.indexOf(["record","reward","user"],tab.name) > -1 && !this.login && this.getCookie('password') != this.password) {
             this.$prompt('请输入密码', '提示', {
               confirmButtonText: '确定',
               cancelButtonText: '取消',
@@ -517,59 +576,9 @@
           }
           this.init()
         },
-        urlDownload() {
-          this.loading = true;
-          this.init()
-          this.$http.get('/imitate/?url='+this.url).then(function(res){
-              this.loading = false;
-              item = res.data
-              if (item.code == 200) {
-                setTimeout(window.open(item.data, '_blank'), 500);
-              } else {
-                this.$message({
-                  message: '下载失败!',
-                  type: 'warning'
-                });
-              }
-
-          },function(res){
-              console.log(res.status);
-          });
-        },
-        regionQ() {
-          this.init()
-          this.$http.get('/region/?idcard='+this.idcard).then(function(res){
-              item = res.data.data
-              this.region.addr = item.Addr
-              this.region.brith = item.Birth
-              this.region.gender = item.Gender
-              this.region.err = item.Err
-              if (item.Err != '') {
-                this.err_show = true
-              } else {
-                this.info_show = true
-              }
-          },function(res){
-              console.log(res.status);
-          });
-        },
-        taxQ() {
-          this.init()
-          this.$http.get('/tax/?salary='+this.salary+'&social='+this.social||0).then(function(res){
-            this.info_show = true
-            item = res.data.data
-            this.tax.new_more = item.newMore
-            this.tax.new_should = item.newShould
-            this.tax.new_tax = item.newTax
-            this.tax.old_should = item.oldShould
-            this.tax.old_tax = item.oldTax
-          },function(res){
-              console.log(res.status);
-          });
-        },
         init() {
-          // this.info_show = false
-          // this.err_show = false
+          this.getReward()
+          this.getSummer()
         }
       },
       mounted() {
@@ -579,12 +588,6 @@
         this.getUser()
       },
       watch: {
-        salary() {
-          this.taxQ()
-        },
-        social() {
-          this.taxQ()
-        }
       }
     })
   </script>
