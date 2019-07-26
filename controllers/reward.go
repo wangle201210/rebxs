@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/wangle201210/rebxs/models"
@@ -46,7 +47,7 @@ func (this *RewardController) Save() {
 	if err = json.Unmarshal(this.Ctx.Input.RequestBody, &Reward); err == nil {
 		user := models.User{Id: Reward.User_id}
 		_ = o.Read(&user)
-		in := models.Reward{User: &user, Participant: Reward.Participant,Type:Reward.Type,Time: getTime()}
+		in := models.Reward{User: &user, Participant: Reward.Participant,Type:Reward.Type,Time: Reward.Time}
 		err := in.Insert()
 		if err == nil {
 			resp = Response{addSuccess.code,addSuccess.text,Reward}
@@ -79,6 +80,7 @@ func RewardList(user_id int64,timeNow string) []orm.Params  {
 	if user_id != 0 {
 		qs = qs.Filter("user_id",user_id)
 	}
+	fmt.Println("info: ",user_id,timeNow)
 	_, _ = qs.Values(&maps,"user__name","participant","time","type","user__id")
 	return maps
 }

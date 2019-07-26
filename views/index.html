@@ -19,9 +19,9 @@
           <el-tab-pane label="成员管理" name="user"></el-tab-pane>
         </el-tabs>
         <div style="margin: 0px 10px 20px 10px;">
-          <span>今天属于统计数据以来的第{{week}}周,录入周次不用选择，系统自动计算</span>
+          <span>今天属于统计数据以来的第{{week}}周</span>
           <span style="float: right;">
-            选择查看周数：<el-input-number size="small" v-model="time" @change="weekChange" :min="1" label="请选择周数"></el-input-number>
+            选择查看（录入）周数：<el-input-number size="small" v-model="time" @change="weekChange" :min="1" label="请选择周数"></el-input-number>
           </span>
         </div>
         <div v-if="activeName == 'summer'">
@@ -178,7 +178,7 @@
                     placeholder="请选择提供人">
                     <el-option
                       v-for="item in user_list"
-                      :key="item.id"
+                      :key="''+item.id"
                       :label="item.name"
                       :value="item.id">
                     </el-option>
@@ -302,6 +302,7 @@
       el: '#app',
       data: function() {
         return { 
+          start: "2019-07-22 00:00:00",
           addUserName: "",
           rewardData: [],
           rewardUser: [],
@@ -312,7 +313,6 @@
           login: false,
           password: 'fry',
           project_id: '',
-          week: 1,
           time: 1,
           title: {},
           summerData: [],
@@ -324,7 +324,7 @@
           },
           user_record: [],
           project_list: {},
-          user_list: {},
+          user_list: [],
           fullHeight: document.documentElement.clientHeight - 20,
           activeName: 'summer',
           idcard: '',
@@ -366,6 +366,14 @@
             data.push(r)
           })
           return data
+        },
+        week: function () {
+          var ce = 60*60*24*7*1000
+          var s = new Date(this.start).getTime()
+          var e = new Date().getTime() 
+
+          var z = Math.ceil((e-s) / ce)
+          return z
         }
       },
       methods: {
@@ -427,9 +435,10 @@
             })
           }
           var data = {}
-          data.user_id = this.provider
+          data.user_id = parseInt(this.provider)
           data.type = this.rewardType
           data.participant = _.join(this.rewardUser, ' | ')
+          data.time = "第"+this.time+"周"
           this.$http.post('/reward',data).then(function(res){
             this.$message({
               message: '保存成功！',
@@ -474,6 +483,10 @@
         weekChange() {
           this.getSummer()
           this.getReward()
+          this.userRecordInit()
+          if (this.name == "record") {
+            this.projectChange()
+          }
         },
         getSummer() {
           var time = "第"+this.time+"周"
@@ -505,7 +518,7 @@
           var project_id = this.project_id
           _.forEach(this.user_record,function(value) {
             if (value.result > 0) {
-              data.push({user_id: value.user_id,result: value.result,project_id: project_id})
+              data.push({user_id: parseInt(value.user_id),result: value.result,project_id: project_id,time:value.time})
             }
           });
           this.$http.post('/record',data).then(function(res){
@@ -527,8 +540,15 @@
         },
         getUser() {
           this.$http.get('/users').then(function(res){
-              this.user_list = res.data.data
-              this.userRecordInit()
+            this.user_list = res.data.data
+            // var item = res.data.data 
+            // var that = this
+            //  _.forEach(item,function(value) {
+            //   value.id = parseInt(value.int)
+            //   that.user_list.push(value)
+            // });
+             // console.log(this.user_list,"-------")
+            this.userRecordInit()
           },function(res){
               console.log(res.status);
           });
@@ -537,7 +557,7 @@
           this.user_record = []
           var that = this
           _.forEach(this.user_list,function(value) {
-            that.user_record.push({user_id: value.id,user_name: value.name,result: 0})
+            that.user_record.push({user_id: value.id,user_name: value.name,result: 0,time: "第"+that.time+"周"})
           });
         },
         handleClick(tab, event) {

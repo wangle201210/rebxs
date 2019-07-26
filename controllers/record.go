@@ -88,11 +88,11 @@ func (this *RecordController) Save() {
 	if err != nil {
 		fmt.Println("项目呢？？")
 	}
-	timeNow := getTime()
 	for _, row := range ob {
+		fmt.Println("row is: ",row)
 		user := models.User{Id: row.User_id}
 		err = o.Read(&user)
-		in := models.Record{User: &user, Project: &project,Result:row.Result,Time: timeNow}
+		in := models.Record{User: &user, Project: &project,Result:row.Result,Time: row.Time}
 		_,err:=o.InsertOrUpdate(&in,"time","user_id","project_id")
 		if err == nil {
 			fmt.Println("插入成功")
@@ -120,7 +120,11 @@ func  (this *RecordController) GetList()  {
 	timeNow := this.GetString("time")
 	o := orm.NewOrm()
 	var lists []orm.Params
-	num, err := o.Raw("SELECT u.name AS '成员',p.name as '项目',r.result as '成绩',s.score as '分数',r.time as '时间' FROM user u LEFT JOIN record r ON r.user_id = u.id LEFT JOIN project p ON p.id = r.project_id LEFT JOIN score s ON s.project_id = p.id and s.min <= r.result and r.result <= s.max WHERE r.id > 0  and r.time = ? ", timeNow).Values(&lists)
+	num, err := o.Raw("SELECT u.name AS '成员',p.name as '项目',r.result as '成绩',s.score as '分数',r.time as '时间' " +
+		"FROM user u LEFT JOIN record r ON r.user_id = u.id " +
+		"LEFT JOIN project p ON p.id = r.project_id " +
+		"LEFT JOIN score s ON s.project_id = p.id and s.min <= r.result and r.result <= s.max " +
+		"WHERE r.id > 0  and r.time = ? and s.score > 0", timeNow).Values(&lists)
 	if err == nil && num > 0 {
 	}
 	var data []map[string]interface{}

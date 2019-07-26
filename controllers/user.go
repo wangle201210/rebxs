@@ -17,13 +17,16 @@ var modUserList []models.User
 
 func (this *UserController) All() {
 	o := orm.NewOrm()
-	qs := o.QueryTable("User")
-	all, e := qs.All(&modUserList)
-	if e != nil {
-		beego.Info(e)
+	var lists []orm.Params
+
+	_, err := o.Raw("SELECT * from `user` order by convert(name using gbk) asc").Values(&lists)
+
+
+	if err != nil {
+		beego.Info(err)
 	} else {
-		beego.Info(all)
-		resp = Response{200,"获取成功！",modUserList}
+		//beego.Info(lists)
+		resp = Response{200,"获取成功！",lists}
 	}
 	this.Data["json"] = resp
 	this.ServeJSON()
