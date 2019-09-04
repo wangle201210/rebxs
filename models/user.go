@@ -1,22 +1,29 @@
 package models
 
 import (
-	"github.com/astaxie/beego"
+	"fmt"
 	"github.com/astaxie/beego/orm"
+	"time"
 )
 
 type User struct {
 	Id       	int64		`json:"id" orm:"column(id);auto;"`
 	Name     	string    	`json:"name" orm:"column(name);size(100)"`
 	Record      []*Record	`orm:"reverse(many)"`
+	CreatedAt   time.Time	`json:"created_at" orm:"auto_now_add;type(datetime)"`
+	UpdatedAt   time.Time	`json:"updated_at" orm:"auto_now;type(datetime)"`
 }
 
-func Find(m User) (r User) {
-	read := m.Read("Name", "Password")
+func (reg *User) FindOrCreat (){
+	read := reg.Read("Name")
 	if read != nil {
-		beego.Debug(read)
+		if reg.Name != "" {
+			e := reg.Insert()
+			if e != nil {
+				fmt.Println(e)
+			}
+		}
 	}
-	r = m
 	return
 }
 // User database CRUD methods include Insert, Read, Update and Delete

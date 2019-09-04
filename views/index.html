@@ -8,7 +8,7 @@
 <body>
   <div id="app">
     <template>
-      <el-card :style="maxHeight">
+      <el-card :style="maxHeight" v-loading.fullscreen.lock="fullscreenLoading">
         <el-tabs v-model="name" @tab-click="handleClick">
           <el-tab-pane label="汇总数据" name="summer"></el-tab-pane>
           <el-tab-pane label="战绩查看" name="see"></el-tab-pane>
@@ -151,6 +151,20 @@
                   </el-select>
                 </el-form-item>
               </el-col>
+              <el-upload
+                class="upload-demo"
+                action="http://localhost:8080/recordUpload"
+                :on-success="uploadSuccess"
+                :data="uploadData"
+                :before-upload="beforeUpload"
+                :limit="5"
+                :file-list="fileList"
+                :on-exceed="handleExceed"
+                multiple
+                :show-file-list="false">
+                <el-button type="primary">上传战绩图片</el-button>
+                <span slot="tip" class="el-upload__tip"> 只能上传jpg/png文件，目前只能单张上传</span>
+              </el-upload>
               <el-button style="float: right; margin-right: 20px" type="primary" plain @click="saveRecord">保存</el-button>
             </el-row>
           </el-form>
@@ -302,6 +316,12 @@
       el: '#app',
       data: function() {
         return { 
+          fullscreenLoading: false,
+          uploadData: {
+            type: this.project_id,
+            time: "第"+this.time+"周",
+          },
+          fileList: [],
           start: "2019-07-22 00:00:00",
           addUserName: "",
           rewardData: [],
@@ -309,7 +329,7 @@
           rewardType: "",
           rewardList: ["s","s+","ss","ss+"],
           provider: "",
-          name: "summer",
+          name: "record",
           login: false,
           password: 'fry',
           project_id: '',
@@ -326,7 +346,7 @@
           project_list: {},
           user_list: [],
           fullHeight: document.documentElement.clientHeight - 20,
-          activeName: 'summer',
+          activeName: 'record',
           idcard: '',
           salary: '',
           social: '',
@@ -377,6 +397,22 @@
         }
       },
       methods: {
+        beforeUpload() {
+          this.fullscreenLoading = true
+        },
+        uploadSuccess(file) {
+          this.getUser()
+          setTimeout(() => {
+            this.fullscreenLoading = false
+            this.projectChange()
+          },500)
+          setTimeout(() => {
+            this.fileList = []
+          },5000)
+        },
+        handleExceed(files, fileList) {
+          this.$message.warning(`当前限制选择 5 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
+        },
         deleteUser(id) {
           this.$confirm('此操作将永久删除该成员, 是否继续?', '提示', {
             confirmButtonText: '确定',
@@ -608,6 +644,18 @@
         this.getUser()
       },
       watch: {
+        project_id() {
+          this.uploadData = {
+            type: this.project_id,
+            time: "第"+this.time+"周"
+          }
+        },
+        time() {
+          this.uploadData = {
+            type: this.project_id,
+            time: "第"+this.time+"周"
+          }
+        }
       }
     })
   </script>

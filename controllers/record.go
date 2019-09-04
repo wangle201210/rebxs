@@ -8,6 +8,7 @@ import (
 	"github.com/astaxie/beego/orm"
 	"github.com/wangle201210/rebxs/helper"
 	"github.com/wangle201210/rebxs/models"
+	"log"
 	"strconv"
 
 	//"github.com/wangle201210/rebxs/helper"
@@ -35,6 +36,47 @@ type DataListRecord struct {
 
 var modRecord models.Record
 var modRecordList []models.Record
+
+func (this *RecordController) Upload()  {
+	f, h, err := this.GetFile("file")
+	project_id, _ := this.GetInt64("type")
+	nowTime := this.GetString("time")
+	if err != nil {
+		log.Fatal("getfile err ", err)
+	}
+	defer f.Close()
+	fPath := "static/upload/" + h.Filename
+	this.SaveToFile("file", fPath) // 保存位置在 static/upload, 没有文件夹要先创建
+	res, err := helper.GeneralRecognizeBasic("./" + fPath)
+	resp = Response{addSuccess.code,addSuccess.text,""}
+	if err != nil {
+		fmt.Println(err,"----------")
+		resp.Data = h.Filename+"导入未成功！"
+	} else {
+		insert(project_id,nowTime,res)
+	}
+	this.Data["json"] = resp
+	this.ServeJSON()
+}
+func insert(projectId int64,nowTime string,data map[string]helper.DataList)  {
+	o := orm.NewOrm()
+	project := models.Project{Id: projectId}
+	err := o.Read(&project)
+	if err != nil {
+		fmt.Println("项目呢？？")
+	}
+	for _, row := range data {
+		user := &models.User{Name:row.User}
+		user.FindOrCreat()
+		fmt.Println(user,"user")
+		in := models.Record{User: user, Project: &project,Result:row.Score,Time: nowTime}
+		_,err:=o.InsertOrUpdate(&in,"time","user_id","project_id")
+		if err == nil {
+			fmt.Println("插入成功")
+		}
+	}
+
+}
 
 func (this *RecordController) All() {
 	o := orm.NewOrm()
@@ -187,7 +229,6 @@ func (this *RecordController) ShowOne() {
 	o := orm.NewOrm()
 	qs := o.QueryTable("record")
 	_, _ = qs.Filter("project_id", project_id).Filter("time",timeNow).All(&all)
-	fmt.Println("ShowOne",timeNow,project_id,all)
 	this.Data["json"] = all
 	this.ServeJSON()
 }
